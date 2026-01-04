@@ -1,0 +1,6 @@
+bin/
+obj/
+.vs/
+cinema.db
+*.user
+*.suo
