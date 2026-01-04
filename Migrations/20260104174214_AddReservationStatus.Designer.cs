@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CinemaReservationSystem.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260104142031_CinemaModels")]
-    partial class CinemaModels
+    [Migration("20260104174214_AddReservationStatus")]
+    partial class AddReservationStatus
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,6 +51,61 @@ namespace CinemaReservationSystem.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Movies");
+                });
+
+            modelBuilder.Entity("CinemaReservationSystem.Models.Reservation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GuestEmail")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GuestName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ScreeningId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ScreeningId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Reservations");
+                });
+
+            modelBuilder.Entity("CinemaReservationSystem.Models.ReservationSeat", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ReservationId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SeatId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReservationId");
+
+                    b.HasIndex("SeatId");
+
+                    b.ToTable("ReservationSeats");
                 });
 
             modelBuilder.Entity("CinemaReservationSystem.Models.Screening", b =>
@@ -122,6 +177,42 @@ namespace CinemaReservationSystem.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("CinemaReservationSystem.Models.Reservation", b =>
+                {
+                    b.HasOne("CinemaReservationSystem.Models.Screening", "Screening")
+                        .WithMany()
+                        .HasForeignKey("ScreeningId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CinemaReservationSystem.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Screening");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CinemaReservationSystem.Models.ReservationSeat", b =>
+                {
+                    b.HasOne("CinemaReservationSystem.Models.Reservation", "Reservation")
+                        .WithMany("ReservationSeats")
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CinemaReservationSystem.Models.Seat", "Seat")
+                        .WithMany()
+                        .HasForeignKey("SeatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reservation");
+
+                    b.Navigation("Seat");
+                });
+
             modelBuilder.Entity("CinemaReservationSystem.Models.Screening", b =>
                 {
                     b.HasOne("CinemaReservationSystem.Models.Hall", "Hall")
@@ -155,6 +246,11 @@ namespace CinemaReservationSystem.Migrations
             modelBuilder.Entity("CinemaReservationSystem.Models.Hall", b =>
                 {
                     b.Navigation("Seats");
+                });
+
+            modelBuilder.Entity("CinemaReservationSystem.Models.Reservation", b =>
+                {
+                    b.Navigation("ReservationSeats");
                 });
 #pragma warning restore 612, 618
         }

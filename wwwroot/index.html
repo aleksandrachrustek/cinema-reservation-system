@@ -2,19 +2,65 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Kino – Rezerwacja</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Kino</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
 
-    <h1>Rezerwacja miejsc w kinie</h1>
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <div class="logo">🎬 Kino</div>
+        <nav id="navLinks"></nav>
+    </header>
 
-    <select id="screenings"></select>
+    <!-- CONTENT -->
+    <main class="container">
+        <div id="app"></div>
+        <div id="loader" class="loader hidden"></div>
+    </main>
 
-    <div id="seats"></div>
+    <!-- MODAL REZERWACJI -->
+    <div id="reservationModal" class="modal hidden">
+        <div class="modal-content card">
+            <h2>🎬 Finalizacja rezerwacji</h2>
+            <p class="modal-subtitle">
+                Sprawdź dane i potwierdź rezerwację
+            </p>
 
-    <button onclick="reserve()">Rezerwuj</button>
+            <div id="reservationSummary"></div>
 
-    <script src="script.js"></script>
+            <!-- DANE GOŚCIA -->
+            <div id="guestForm">
+                <input id="guestName" placeholder="Imię">
+                <input id="guestEmail" placeholder="Email">
+            </div>
+
+            <div class="modal-actions">
+                <button id="confirmReservationBtn" onclick="confirmReservation()">
+                    Potwierdź
+                </button>
+                <button class="secondary" onclick="closeReservationModal()">
+                    Anuluj
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- SCRIPTS -->
+    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/screenings.js"></script>
+    <script src="js/seats.js"></script>
+    <script src="js/account.js"></script>
+    <script src="js/guest.js"></script>
+    <script src="js/success.js"></script>
+
 </body>
 </html>

@@ -23,7 +23,10 @@ namespace CinemaReservationSystem.Controllers
             var occupiedSeats = _context.ReservationSeats
                 .Include(rs => rs.Seat)
                 .Include(rs => rs.Reservation)
-                .Where(rs => rs.Reservation.ScreeningId == screeningId)
+                .Where(rs =>
+                    rs.Reservation.ScreeningId == screeningId &&
+                    rs.Reservation.Status == "ACTIVE")
+
                 .Select(rs => new
                 {
                     rs.Seat.Row,
@@ -36,30 +39,55 @@ namespace CinemaReservationSystem.Controllers
 
         //  TWORZENIE REZERWACJI
         [HttpPost("create")]
-        public IActionResult CreateReservation(
-            int userId,
-            int screeningId,
-            [FromBody] List<int> seatIds)
+        public IActionResult CreateReservation([FromBody] CreateReservationDto dto)
         {
-            // sprawdzamy czy miejsca są wolne
-            var occupiedSeatIds = _context.ReservationSeats
-                .Where(rs => rs.Reservation.ScreeningId == screeningId)
-                .Select(rs => rs.SeatId)
-                .ToList();
+            // WALIDACJA
+            if (dto.SeatIds == null || dto.SeatIds.Count == 0)
+                return BadRequest("Brak miejsc");
 
-            if (seatIds.Any(id => occupiedSeatIds.Contains(id)))
-                return BadRequest("One or more seats are already occupied");
+            if (dto.UserId == 0)
+            {
+                dto.UserId = null;
+            }
 
+            if (dto.UserId == null)
+            {
+                // GOŚĆ
+                if (string.IsNullOrWhiteSpace(dto.GuestName) ||
+                    string.IsNullOrWhiteSpace(dto.GuestEmail))
+                {
+                    return BadRequest("Dane gościa są wymagane");
+                }
+            }
+
+            // SPRAWDZENIE ZAJĘTOŚCI
+            var takenSeats = _context.ReservationSeats
+                .Include(rs => rs.Seat)
+                .Include(rs => rs.Reservation)
+                .Any(rs =>
+                    rs.Reservation.ScreeningId == dto.ScreeningId &&
+                    rs.Reservation.Status == "ACTIVE" &&
+                    dto.SeatIds.Any(id => id == rs.SeatId));
+
+            if (takenSeats)
+                return BadRequest("Jedno z miejsc jest już zajęte");
+
+            // REZERWACJA
             var reservation = new Reservation
             {
-                UserId = userId,
-                ScreeningId = screeningId
+                ScreeningId = dto.ScreeningId,
+                UserId = dto.UserId,
+                GuestName = dto.UserId == null ? dto.GuestName : null,
+                GuestEmail = dto.UserId == null ? dto.GuestEmail : null,
+                ReservationCode = Guid.NewGuid().ToString("N")[..8].ToUpper(),
+                Status = "ACTIVE"
             };
 
             _context.Reservations.Add(reservation);
             _context.SaveChanges();
 
-            foreach (var seatId in seatIds)
+            // MIEJSCA
+            foreach (var seatId in dto.SeatIds)
             {
                 _context.ReservationSeats.Add(new ReservationSeat
                 {
@@ -70,25 +98,81 @@ namespace CinemaReservationSystem.Controllers
 
             _context.SaveChanges();
 
-            return Ok("Reservation created");
+            return Ok(new
+            {
+                reservation.Id,
+                reservation.CreatedAt,
+                reservation.ReservationCode
+            });
         }
+
 
         //  ANULOWANIE REZERWACJI
         [HttpDelete("{reservationId}")]
         public IActionResult CancelReservation(int reservationId)
         {
             var reservation = _context.Reservations
-                .Include(r => r.ReservationSeats)
                 .FirstOrDefault(r => r.Id == reservationId);
 
             if (reservation == null)
                 return NotFound();
 
-            _context.ReservationSeats.RemoveRange(reservation.ReservationSeats);
-            _context.Reservations.Remove(reservation);
+            _context.ReservationSeats.RemoveRange(
+                _context.ReservationSeats.Where(rs => rs.ReservationId == reservation.Id)
+            );
+            reservation.Status = "CANCELLED";
+
             _context.SaveChanges();
 
             return Ok("Reservation cancelled");
         }
+
+
+        [HttpGet("user/{userId}")]
+        public IActionResult GetUserReservations(int userId)
+        {
+            var reservations = _context.Reservations
+                .Include(r => r.Screening)
+                    .ThenInclude(s => s.Movie)
+                .Include(r => r.ReservationSeats)
+                .Where(r => r.UserId == userId)
+                .Select(r => new
+                {
+                    r.Id,
+                    Movie = r.Screening.Movie.Title,
+                    Time = r.Screening.StartTime,
+                    Seats = r.ReservationSeats.Count,
+                    r.Status
+                })
+                .ToList();
+
+            return Ok(reservations);
+        }
+        [HttpGet("guest")]
+        public IActionResult GetGuestReservations([FromQuery] string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest("Email jest wymagany");
+
+            var reservations = _context.Reservations
+                .Include(r => r.Screening)
+                    .ThenInclude(s => s.Movie)
+                .Include(r => r.ReservationSeats)
+                .Where(r => r.GuestEmail == email)
+                .Select(r => new
+                {
+                    r.Id,
+                    Movie = r.Screening.Movie.Title,
+                    Time = r.Screening.StartTime,
+                    Seats = r.ReservationSeats.Count,
+                    r.Status
+                })
+                .ToList();
+
+            return Ok(reservations);
+        }
+
+
     }
+
 }

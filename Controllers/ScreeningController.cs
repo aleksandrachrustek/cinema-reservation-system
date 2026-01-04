@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CinemaReservationSystem.Data;
+using CinemaReservationSystem.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using CinemaReservationSystem.Data;
 
 namespace CinemaReservationSystem.Controllers
 {
@@ -43,6 +44,21 @@ namespace CinemaReservationSystem.Controllers
                 .ToList();
 
             return Ok(seats);
+        }
+        [HttpPost]
+        public IActionResult CreateScreening(int movieId, int hallId, DateTime startTime)
+        {
+            var screening = new Screening
+            {
+                MovieId = movieId,
+                HallId = hallId,
+                StartTime = startTime
+            };
+
+            _context.Screenings.Add(screening);
+            _context.SaveChanges();
+
+            return Ok("Screening created");
         }
 
     }

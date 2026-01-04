@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CinemaReservationSystem.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260104143836_Reservations")]
-    partial class Reservations
+    [Migration("20260104180539_AddReservationCode")]
+    partial class AddReservationCode
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -62,10 +62,24 @@ namespace CinemaReservationSystem.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("GuestEmail")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GuestName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReservationCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("ScreeningId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("UserId")
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("UserId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
@@ -177,9 +191,7 @@ namespace CinemaReservationSystem.Migrations
 
                     b.HasOne("CinemaReservationSystem.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Screening");
 
