@@ -11,31 +11,30 @@
                 const card = document.createElement("div");
                 card.className = "screening-card";
 
+                const date = new Date(s.startTime);
+
                 card.innerHTML = `
                     <div class="screening-title">${s.movie.title}</div>
                     <div class="screening-time">
-                        🕒 ${new Date(s.startTime).toLocaleString()}
+                        🗓 ${date.toLocaleDateString()} &nbsp; ⏰ ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                     <div class="screening-hall">
                         📍 ${s.hall.name}
                     </div>
-                `;
+                    <div class="screening-action">
+                        Wybierz miejsca →
+                    </div>
+                 `;
 
                 card.onclick = () => {
                     localStorage.setItem("screeningId", s.id);
-
-                    localStorage.setItem("screeningDetails", JSON.stringify({
-                        movie: s.movie.title,
-                        startTime: s.startTime,
-                        hall: s.hall.name
-                    }));
-
+                    localStorage.setItem("screeningDetails", JSON.stringify(s));
                     navigate("seats");
                 };
 
 
-
                 grid.appendChild(card);
             });
+
         });
 }

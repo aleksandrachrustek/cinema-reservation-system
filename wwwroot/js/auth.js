@@ -1,56 +1,52 @@
 ﻿function login() {
-    const email = document.getElementById("email").value.trim();
+    const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
     if (!email || !password) {
-        toast("Uzupełnij wszystkie pola");
+        toast("Uzupełnij email i hasło");
         return;
     }
 
     fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            email: email,
-            password: password
-        })
-
+        body: JSON.stringify({ email, password })
     })
         .then(r => {
             if (!r.ok) throw new Error();
             return r.json();
         })
         .then(user => {
-            localStorage.setItem("user", JSON.stringify({
-                id: user.id,
-                email: user.email,
-                role: user.role
-            }));
-
+            localStorage.setItem("user", JSON.stringify(user));
             updateNavbar();
-            navigate("home");
             toast("Zalogowano 🎉");
+            navigate("home");
         })
-        .catch(() => {
-            toast("Błędny email lub hasło");
-        });
+        .catch(() => toast("Błędny email lub hasło"));
 }
 
 
 function logout() {
     localStorage.removeItem("user");
     updateNavbar();
+    toast("Wylogowano");
     navigate("home");
 }
 
 
+
 function register() {
-    const email = regEmail.value;
-    const pass1 = regPassword.value;
-    const pass2 = regPassword2.value;
+    const email = document.getElementById("regEmail").value.trim();
+    const pass1 = document.getElementById("regPassword").value;
+    const pass2 = document.getElementById("regPassword2").value;
 
     if (!email || !pass1 || !pass2) {
         toast("Uzupełnij wszystkie pola");
+        return;
+    }
+
+    if (pass1.length < 6) {
+        toast("Hasło musi mieć min. 6 znaków");
         return;
     }
 
@@ -62,17 +58,14 @@ function register() {
     fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            email: email,
-            password: pass1
-        })
-
+        body: JSON.stringify({ email, password: pass1 })
     })
         .then(r => {
             if (!r.ok) throw new Error();
             toast("Konto utworzone 🎉");
             navigate("login");
         })
-        .catch(() => toast("Błąd rejestracji"));
+        .catch(() => toast("Email już istnieje lub błąd rejestracji"));
 }
+
 

@@ -34,44 +34,95 @@ function navigate(view) {
 
 /* ================= NAVBAR LOGIKA ================= */
 function updateNavbar() {
-    const nav = document.getElementById("navLinks");
     const user = JSON.parse(localStorage.getItem("user"));
 
-    nav.innerHTML = `
-        <a onclick="navigate('home')">Home</a>
-        <a onclick="navigate('screenings')">Seanse</a>
+    const show = id => document.getElementById(id).style.display = "inline";
+    const hide = id => document.getElementById(id).style.display = "none";
 
-        ${!user
-            ? `
-                    <a onclick="navigate('login')">Zaloguj</a>
-                    <a onclick="navigate('guest')">Znajdź rezerwację</a>
-                  `
-            : `
-                    <a onclick="navigate('account')">Konto</a>
-                    <a onclick="logout()">Wyloguj</a>
-                  `
+    if (!user) {
+        show("loginLink");
+        show("registerLink");
+        show("guestSearchLink");
+
+        hide("accountLink");
+        hide("adminLink");
+        hide("logoutLink");
+    } else {
+        hide("loginLink");
+        hide("registerLink");
+        hide("guestSearchLink");
+
+        show("logoutLink");
+
+        if (user.role === "ADMIN") {
+            show("adminLink");
+            hide("accountLink");
+        } else {
+            show("accountLink");
+            hide("adminLink");
         }
-    `;
+    }
 }
 
-/* ================= START ================= */
-window.onload = () => {
+
+
+function showLoader() {
+    document.getElementById("loader").classList.remove("hidden");
+}
+
+function hideLoader() {
+    document.getElementById("loader").classList.add("hidden");
+}
+
+function navigate(view) {
+    showLoader();
+
+    fetch(`/views/${view}.html`)
+        .then(r => r.text())
+        .then(html => {
+            const app = document.getElementById("app");
+            app.innerHTML = `<div class="view">${html}</div>`;
+            location.hash = view;
+
+            hideLoader();
+
+            if (view === "screenings") loadScreenings();
+            if (view === "seats") loadSeats();
+            if (view === "account") loadAccount();
+            if (view === "admin") loadAdmin();
+            if (view === "success") loadSuccess();
+        });
+}
+
+/* ===== START APLIKACJI ===== */
+document.addEventListener("DOMContentLoaded", () => {
     let view = location.hash.replace("#", "");
 
     // ✅ DOMYŚLNIE HOME
-    if (!view) {
-        view = "home";
-    }
+    if (!view) view = "home";
 
     navigate(view);
-};
+    updateNavbar();
+});
 
-/* ================= COFANIE ================= */
-window.onpopstate = () => {
+/* ===== OBSŁUGA BACK ===== */
+window.addEventListener("hashchange", () => {
     let view = location.hash.replace("#", "");
     if (!view) view = "home";
     navigate(view);
-};
+});
+
+/* ===== TOAST ===== */
+function toast(message) {
+    const t = document.getElementById("toast");
+    t.innerText = message;
+    t.classList.remove("hidden");
+
+    setTimeout(() => {
+        t.classList.add("hidden");
+    }, 3000);
+}
+
 
 /* ================= TOAST ================= */
 function toast(message) {
@@ -86,3 +137,15 @@ function toast(message) {
 document.addEventListener("DOMContentLoaded", () => {
     updateNavbar();
 });
+function getUser() {
+    return JSON.parse(localStorage.getItem("user"));
+}
+
+function isLoggedIn() {
+    return !!getUser();
+}
+
+function isAdmin() {
+    const u = getUser();
+    return u && u.role === "ADMIN";
+}

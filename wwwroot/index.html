@@ -12,10 +12,23 @@
 <body>
 
     <!-- NAVBAR -->
-    <header class="navbar">
-        <div class="logo">🎬 Kino</div>
-        <nav id="navLinks"></nav>
-    </header>
+    <nav class="navbar">
+        <div class="nav-left" onclick="navigate('home')">🎬 Kino</div>
+
+        <div class="nav-right">
+            <a onclick="navigate('screenings')">Seanse</a>
+
+            <a id="guestSearchLink" onclick="navigate('guest')">Znajdź rezerwację</a>
+            <a id="loginLink" onclick="navigate('login')">Zaloguj</a>
+            <a id="registerLink" onclick="navigate('register')">Rejestracja</a>
+
+            <a id="accountLink" onclick="navigate('account')">Konto</a>
+            <a id="adminLink" onclick="navigate('admin')">Admin</a>
+            <a id="logoutLink" onclick="logout()">Wyloguj</a>
+        </div>
+    </nav>
+
+
 
     <!-- CONTENT -->
     <main class="container">

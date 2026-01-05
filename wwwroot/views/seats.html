@@ -1,19 +1,26 @@
 ﻿<h1>Wybierz miejsca</h1>
 
-<div class="screen">EKRAN</div>
+<div class="cinema">
 
-<div id="seatsContainer" class="cinema"></div>
-
-<div class="legend-wrapper">
-    <div class="legend">
-        <div><span class="seat available"></span> Wolne</div>
-        <div><span class="seat selected"></span> Wybrane</div>
-        <div><span class="seat occupied"></span> Zajęte</div>
+    <div class="legend-wrapper">
+        <div class="legend">
+            <div><div class="seat available"></div> Wolne</div>
+            <div><div class="seat selected"></div> Wybrane</div>
+            <div><div class="seat occupied"></div> Zajęte</div>
+        </div>
     </div>
+
+    <div class="screen">EKRAN</div>
+
+    <div id="seatsContainer"></div>
+
+    <div class="seat-counter" id="seatCounter">
+        Wybrane miejsca: 0
+    </div>
+
+    <button id="reserveBtn" onclick="openReservationModal()" disabled>
+        Rezerwuj miejsca
+    </button>
+
 </div>
-
-<p id="seatCounter" class="seat-counter">Wybrane miejsca: 0</p>
-
-<button id="reserveBtn" onclick="openReservationModal()">🎟️ Rezerwuj</button>
-
 

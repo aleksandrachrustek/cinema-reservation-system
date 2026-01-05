@@ -5,6 +5,7 @@
 ======================= */
 function loadSeats() {
     const screeningId = localStorage.getItem("screeningId");
+
     if (!screeningId) {
         toast("Brak seansu");
         return;
@@ -20,12 +21,14 @@ function loadSeats() {
             const container = document.getElementById("seatsContainer");
             container.innerHTML = "";
 
+            // unikalne rzędy
             const rows = [...new Set(seats.map(s => s.row))];
 
             rows.forEach(rowNumber => {
                 const rowDiv = document.createElement("div");
                 rowDiv.className = "row";
 
+                // litera rzędu (A, B, C...)
                 const rowLetter =
                     typeof rowNumber === "number"
                         ? String.fromCharCode(64 + rowNumber)
@@ -34,52 +37,64 @@ function loadSeats() {
                 seats
                     .filter(s => s.row === rowNumber)
                     .forEach(seat => {
-                        const div = document.createElement("div");
-                        div.className = "seat available";
+                        const seatDiv = document.createElement("div");
 
+                        // sprawdzenie zajętości
                         const isOccupied = occupied.some(
                             o => o.row === seat.row && o.number === seat.number
                         );
 
                         if (isOccupied) {
-                            div.className = "seat occupied";
+                            seatDiv.className = "seat occupied";
                         } else {
-                            div.onclick = () =>
-                                toggleSeat(div, {
+                            seatDiv.className = "seat available";
+
+                            // etykieta miejsca np. 9H
+                            seatDiv.dataset.label = `${seat.number}${rowLetter}`;
+
+                            seatDiv.onclick = () =>
+                                toggleSeat(seatDiv, {
                                     id: seat.id,
-                                    label: `${seat.number}${rowLetter}`
+                                    label: seatDiv.dataset.label
                                 });
                         }
 
-                        rowDiv.appendChild(div);
+                        rowDiv.appendChild(seatDiv);
                     });
 
                 container.appendChild(rowDiv);
             });
 
+            // reset licznika
+            document.getElementById("seatCounter").innerText = "Nie wybrano miejsc";
             updateReserveButton();
-        });
+        })
+        .catch(() => toast("Nie udało się załadować miejsc"));
 }
+
 
 /* =======================
    WYBIERANIE MIEJSC
 ======================= */
-function toggleSeat(div, seat) {
+function toggleSeat(seatDiv, seat) {
     const exists = selectedSeatIds.find(s => s.id === seat.id);
 
     if (exists) {
         selectedSeatIds = selectedSeatIds.filter(s => s.id !== seat.id);
-        div.className = "seat available";
+        seatDiv.className = "seat available";
     } else {
         selectedSeatIds.push(seat);
-        div.className = "seat selected";
+        seatDiv.className = "seat selected";
     }
 
     document.getElementById("seatCounter").innerText =
-        `Wybrane miejsca: ${selectedSeatIds.map(s => s.label).join(", ")}`;
+        selectedSeatIds.length === 0
+            ? "Nie wybrano miejsc"
+            : `Wybrane miejsca: ${selectedSeatIds.map(s => s.label).join(", ")}`;
 
     updateReserveButton();
 }
+
 
 /* =======================
    PRZYCISK REZERWUJ
@@ -137,11 +152,14 @@ function confirmReservation() {
         seatIds: selectedSeatIds.map(s => s.id)
     };
 
+    // USER
     if (user && user.id > 0) {
         dto.userId = user.id;
-    } else {
-        const name = document.getElementById("guestName").value;
-        const email = document.getElementById("guestEmail").value;
+    }
+    // GOŚĆ
+    else {
+        const name = document.getElementById("guestName").value.trim();
+        const email = document.getElementById("guestEmail").value.trim();
 
         if (!name || !email) {
             toast("Podaj imię i email");
@@ -157,11 +175,8 @@ function confirmReservation() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dto)
     })
-        .then(async r => {
-            if (!r.ok) {
-                const msg = await r.text();
-                throw new Error(msg);
-            }
+        .then(r => {
+            if (!r.ok) throw new Error();
             return r.json();
         })
         .then(data => {
@@ -169,7 +184,7 @@ function confirmReservation() {
 
             localStorage.setItem("lastReservation", JSON.stringify({
                 code: data.reservationCode,
-                movie: screening?.movie || "Seans kinowy",
+                movie: screening?.movie?.title || screening?.movie || "Seans kinowy",
                 date: screening?.startTime
                     ? new Date(screening.startTime).toLocaleDateString()
                     : "",
@@ -179,18 +194,19 @@ function confirmReservation() {
                         minute: "2-digit"
                     })
                     : "",
-                hall: screening?.hall.replace(/^Sala\s*/i, "") || "",
+                hall: screening?.hall?.name || screening?.hall || "",
                 seats: selectedSeatIds.map(s => s.label)
             }));
-
 
             selectedSeatIds = [];
             closeReservationModal();
             toast("🎉 Rezerwacja potwierdzona");
             navigate("success");
         })
-        .catch(err => {
-            console.error(err);
+        .catch(() => {
             toast("Błąd rezerwacji");
         });
 }
+
+
+

@@ -1,37 +1,40 @@
-﻿function loadAccount() {
+﻿ffunction loadAccount() {
     const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) {
-        navigate("login");
-        return;
-    }
+    if (!user) return;
 
     fetch(`/api/reservations/user/${user.id}`)
         .then(r => r.json())
         .then(data => {
-            const div = document.getElementById("reservations");
-            div.innerHTML = "";
+            const container = document.getElementById("accountReservations");
+            container.innerHTML = "";
 
             if (data.length === 0) {
-                div.innerHTML = "<p>Brak rezerwacji</p>";
+                container.innerHTML = "<p>Brak rezerwacji</p>";
                 return;
             }
 
             data.forEach(r => {
-                const el = document.createElement("div");
-                el.className = "card";
-                el.innerHTML = `
+                const card = document.createElement("div");
+                card.className = "card";
+
+                const statusClass = r.status.toLowerCase();
+
+                card.innerHTML = `
                     <strong>${r.movie}</strong><br>
-                    🕒 ${new Date(r.time).toLocaleString()}<br>
-                    💺 Miejsca: ${r.seats}<br>
-                    <span class="status ${r.status.toLowerCase()}">${r.status}</span><br>
+                    ⏰ ${new Date(r.time).toLocaleString()}<br>
+                    💺 Liczba miejsc: ${r.seats}<br>
+                    <span class="status ${statusClass}">${r.status}</span>
                     ${r.status === "ACTIVE"
-                        ? `<button onclick="cancelReservation(${r.id})">Anuluj</button>`
-                        : ""}
-`;
-                div.appendChild(el);
+                        ? `<button style="margin-top:12px" onclick="cancelReservation(${r.id})">Anuluj</button>`
+                        : ""
+                    }
+                `;
+
+                container.appendChild(card);
             });
         });
 }
+
 
 function cancelReservation(id) {
     fetch(`/api/reservations/${id}`, { method: "DELETE" })
