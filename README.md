@@ -1,40 +1,39 @@
-\# Cinema Reservation System
+Cinema Reservation System
 
+Cinema Reservation System is a web application that allows users to browse movie screenings, select seats, and make cinema reservations — both as registered users and as guests.
 
+The project was created as a full-stack application combining a REST API backend with a lightweight frontend.
 
-Web application for cinema seat reservations.
+Features
 
+-Seat reservation system with real-time availability
 
+-User accounts (login & registration)
 
-\## Tech Stack
+-Guest reservations without registration
 
-\- ASP.NET Core Web API
+-Interactive seat selection
 
-\- Entity Framework Core
+-Admin panel for managing screenings
 
-\- SQLite
+-Reservation history for users and guests
 
-\- JavaScript
+-Automatic demo data seeding (movies, halls, screenings, admin account)
 
+Tech Stack
 
+Backend: ASP.NET Core Web API, Entity Framework Core, SQLite
 
-\## Features
+Frontend: JavaScript, HTML & CSS
 
-\- User and guest reservations
+Default Admin Account
 
-\- Seat selection
+After first run, an admin account is automatically created:
+Email: admin@kino.pl
+Password: admin123
 
-\- Admin account
+How to Run the Project:
 
-\- Demo data seed
-
-
-
-\## Run project
-
-1\. `dotnet run`
-
-2\. Open browser at `http://localhost:5195/index.hmtl`
-
-
-
+1. Clone the repository
+2. Run the backend: dotnet run
+3. Open your browser and go to: http://localhost:5195/index.html
