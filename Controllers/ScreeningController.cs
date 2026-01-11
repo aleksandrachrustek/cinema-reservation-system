@@ -5,18 +5,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CinemaReservationSystem.Controllers
 {
+    // Kontroler seansów
     [ApiController]
     [Route("api/screenings")]
     public class ScreeningController : ControllerBase
     {
+        // Kontekst bazy danych
         private readonly AppDbContext _context;
 
+        // Wstrzyknięcie kontekstu
         public ScreeningController(AppDbContext context)
         {
             _context = context;
         }
 
-        // LISTA SEANSÓW
+        // Pobranie listy seansów
         [HttpGet]
         public IActionResult GetScreenings()
         {
@@ -28,7 +31,7 @@ namespace CinemaReservationSystem.Controllers
             return Ok(screenings);
         }
 
-        //  MIEJSCA DLA KONKRETNEGO SEANSU
+        // Pobranie miejsc dla konkretnego seansu
         [HttpGet("{id}/seats")]
         public IActionResult GetSeatsForScreening(int id)
         {
@@ -45,6 +48,8 @@ namespace CinemaReservationSystem.Controllers
 
             return Ok(seats);
         }
+
+        // Dodanie nowego seansu
         [HttpPost]
         public IActionResult CreateScreening(int movieId, int hallId, DateTime startTime)
         {
@@ -60,6 +65,5 @@ namespace CinemaReservationSystem.Controllers
 
             return Ok("Screening created");
         }
-
     }
 }

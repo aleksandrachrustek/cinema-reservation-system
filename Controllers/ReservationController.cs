@@ -5,18 +5,21 @@ using CinemaReservationSystem.Models;
 
 namespace CinemaReservationSystem.Controllers
 {
+    // Kontroler rezerwacji
     [ApiController]
     [Route("api/reservations")]
     public class ReservationController : ControllerBase
     {
+        // Kontekst bazy danych
         private readonly AppDbContext _context;
 
+        // Wstrzyknięcie kontekstu
         public ReservationController(AppDbContext context)
         {
             _context = context;
         }
 
-        //  ZAJĘTE MIEJSCA DLA SEANSU
+        // Pobranie zajętych miejsc dla seansu
         [HttpGet("occupied/{screeningId}")]
         public IActionResult GetOccupiedSeats(int screeningId)
         {
@@ -26,7 +29,6 @@ namespace CinemaReservationSystem.Controllers
                 .Where(rs =>
                     rs.Reservation.ScreeningId == screeningId &&
                     rs.Reservation.Status == "ACTIVE")
-
                 .Select(rs => new
                 {
                     rs.Seat.Row,
@@ -37,22 +39,23 @@ namespace CinemaReservationSystem.Controllers
             return Ok(occupiedSeats);
         }
 
-        //  TWORZENIE REZERWACJI
+        // Tworzenie nowej rezerwacji
         [HttpPost("create")]
         public IActionResult CreateReservation([FromBody] CreateReservationDto dto)
         {
-            // WALIDACJA
+            // Sprawdzenie czy wybrano miejsca
             if (dto.SeatIds == null || dto.SeatIds.Count == 0)
                 return BadRequest("Brak miejsc");
 
+            // Zamiana 0 na null (gość)
             if (dto.UserId == 0)
             {
                 dto.UserId = null;
             }
 
+            // Walidacja danych gościa
             if (dto.UserId == null)
             {
-                // GOŚĆ
                 if (string.IsNullOrWhiteSpace(dto.GuestName) ||
                     string.IsNullOrWhiteSpace(dto.GuestEmail))
                 {
@@ -60,7 +63,7 @@ namespace CinemaReservationSystem.Controllers
                 }
             }
 
-            // SPRAWDZENIE ZAJĘTOŚCI
+            // Sprawdzenie czy miejsca są już zajęte
             var takenSeats = _context.ReservationSeats
                 .Include(rs => rs.Seat)
                 .Include(rs => rs.Reservation)
@@ -72,7 +75,7 @@ namespace CinemaReservationSystem.Controllers
             if (takenSeats)
                 return BadRequest("Jedno z miejsc jest już zajęte");
 
-            // REZERWACJA
+            // Utworzenie rezerwacji
             var reservation = new Reservation
             {
                 ScreeningId = dto.ScreeningId,
@@ -86,7 +89,7 @@ namespace CinemaReservationSystem.Controllers
             _context.Reservations.Add(reservation);
             _context.SaveChanges();
 
-            // MIEJSCA
+            // Przypisanie miejsc do rezerwacji
             foreach (var seatId in dto.SeatIds)
             {
                 _context.ReservationSeats.Add(new ReservationSeat
@@ -106,8 +109,7 @@ namespace CinemaReservationSystem.Controllers
             });
         }
 
-
-        //  ANULOWANIE REZERWACJI
+        // Anulowanie rezerwacji
         [HttpDelete("{reservationId}")]
         public IActionResult CancelReservation(int reservationId)
         {
@@ -117,17 +119,18 @@ namespace CinemaReservationSystem.Controllers
             if (reservation == null)
                 return NotFound();
 
+            // Usunięcie przypisanych miejsc
             _context.ReservationSeats.RemoveRange(
                 _context.ReservationSeats.Where(rs => rs.ReservationId == reservation.Id)
             );
-            reservation.Status = "CANCELLED";
 
+            reservation.Status = "CANCELLED";
             _context.SaveChanges();
 
             return Ok("Reservation cancelled");
         }
 
-
+        // Rezerwacje zalogowanego użytkownika
         [HttpGet("user/{userId}")]
         public IActionResult GetUserReservations(int userId)
         {
@@ -148,9 +151,12 @@ namespace CinemaReservationSystem.Controllers
 
             return Ok(reservations);
         }
+
+        // Rezerwacje gościa po emailu
         [HttpGet("guest")]
         public IActionResult GetGuestReservations([FromQuery] string email)
         {
+            // Walidacja emaila
             if (string.IsNullOrWhiteSpace(email))
                 return BadRequest("Email jest wymagany");
 
@@ -171,8 +177,5 @@ namespace CinemaReservationSystem.Controllers
 
             return Ok(reservations);
         }
-
-
     }
-
 }

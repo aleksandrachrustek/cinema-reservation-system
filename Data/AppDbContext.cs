@@ -9,7 +9,6 @@ namespace CinemaReservationSystem.Data
             : base(options)
         {
         }
-
         public DbSet<User> Users { get; set; }
         public DbSet<Movie> Movies { get; set; }
         public DbSet<Hall> Halls { get; set; }

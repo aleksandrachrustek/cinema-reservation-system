@@ -2,11 +2,13 @@
 
 namespace CinemaReservationSystem.Data
 {
+    // Dane startowe aplikacji
     public static class SeedData
     {
+        // Inicjalizacja bazy danych
         public static void Initialize(AppDbContext context)
         {
-            // ADMIN – ZAWSZE SPRAWDZANY
+            // Utworzenie konta administratora
             if (!context.Users.Any(u => u.Email == "admin@kino.pl"))
             {
                 using var sha = System.Security.Cryptography.SHA256.Create();
@@ -26,11 +28,11 @@ namespace CinemaReservationSystem.Data
                 context.SaveChanges();
             }
 
-            // RESZTA DANYCH TYLKO RAZ
+            // Jeśli filmy już istnieją – zakończ
             if (context.Movies.Any())
                 return;
 
-            // FILM
+            // Lista filmów
             var movies = new List<Movie>
             {
                 new Movie { Title = "Matrix", DurationMinutes = 136 },
@@ -43,8 +45,7 @@ namespace CinemaReservationSystem.Data
             context.Movies.AddRange(movies);
             context.SaveChanges();
 
-
-            // SALA + MIEJSCA
+            // Tworzenie sal i miejsc
             var halls = new List<Hall>();
 
             for (int h = 1; h <= 2; h++)
@@ -73,10 +74,10 @@ namespace CinemaReservationSystem.Data
             context.Halls.AddRange(halls);
             context.SaveChanges();
 
-
-            // SEANS
+            // Data początkowa seansów
             var startDate = DateTime.Today.AddDays(1);
 
+            // Generowanie seansów
             foreach (var movie in movies)
             {
                 foreach (var hall in halls)
@@ -96,9 +97,6 @@ namespace CinemaReservationSystem.Data
             }
 
             context.SaveChanges();
-
         }
-
     }
 }
-

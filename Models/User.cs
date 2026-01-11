@@ -13,6 +13,6 @@ namespace CinemaReservationSystem.Models
         public string PasswordHash { get; set; }
 
         [Required]
-        public string Role { get; set; } // USER / ADMIN
+        public string Role { get; set; }
     }
 }

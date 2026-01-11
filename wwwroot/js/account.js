@@ -1,22 +1,33 @@
-﻿ffunction loadAccount() {
+﻿// Ładuje rezerwacje zalogowanego użytkownika
+function loadAccount() {
+
+    // Pobranie użytkownika z localStorage
     const user = JSON.parse(localStorage.getItem("user"));
+
+    // Jeśli brak użytkownika – zakończ
     if (!user) return;
 
+    // Pobranie rezerwacji użytkownika
     fetch(`/api/reservations/user/${user.id}`)
         .then(r => r.json())
         .then(data => {
+
+            // Kontener na rezerwacje
             const container = document.getElementById("accountReservations");
             container.innerHTML = "";
 
+            // Brak rezerwacji
             if (data.length === 0) {
                 container.innerHTML = "<p>Brak rezerwacji</p>";
                 return;
             }
 
+            // Wyświetlenie rezerwacji
             data.forEach(r => {
                 const card = document.createElement("div");
                 card.className = "card";
 
+                // Klasa statusu (active / cancelled)
                 const statusClass = r.status.toLowerCase();
 
                 card.innerHTML = `
@@ -30,16 +41,19 @@
                     }
                 `;
 
+                // Dodanie karty do listy
                 container.appendChild(card);
             });
         });
 }
 
-
+// Anuluje rezerwację
 function cancelReservation(id) {
+
+    // Żądanie usunięcia rezerwacji
     fetch(`/api/reservations/${id}`, { method: "DELETE" })
         .then(() => {
             alert("Rezerwacja anulowana");
-            loadAccount();
+            loadAccount(); // Odśwież listę
         });
 }

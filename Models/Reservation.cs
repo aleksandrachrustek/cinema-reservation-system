@@ -9,15 +9,14 @@ namespace CinemaReservationSystem.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // ZALOGOWANY USER (opcjonalny)
         public int? UserId { get; set; }
         public User? User { get; set; }
 
-        // GOŚĆ
+
         public string? GuestName { get; set; }
         public string? GuestEmail { get; set; }
 
-        // SEANS
+
         public int ScreeningId { get; set; }
         public Screening Screening { get; set; }
 

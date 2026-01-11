@@ -34,7 +34,7 @@ Web application for cinema seat reservations.
 
 1\. `dotnet run`
 
-2\. Open browser at `http://localhost:5195`
+2\. Open browser at `http://localhost:5195/index.hmtl`
 
 
 

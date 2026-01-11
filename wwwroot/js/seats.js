@@ -1,45 +1,53 @@
-﻿let selectedSeatIds = [];
+﻿// Lista wybranych miejsc
+let selectedSeatIds = [];
 
-/* =======================
-   ŁADOWANIE MIEJSC
-======================= */
+// Ładuje mapę miejsc dla seansu
 function loadSeats() {
+
+    // Pobranie ID seansu
     const screeningId = localStorage.getItem("screeningId");
 
+    // Brak seansu
     if (!screeningId) {
         toast("Brak seansu");
         return;
     }
 
+    // Reset wybranych miejsc
     selectedSeatIds = [];
 
+    // Pobranie miejsc i zajętych rezerwacji
     Promise.all([
         fetch(`/api/screenings/${screeningId}/seats`).then(r => r.json()),
         fetch(`/api/reservations/occupied/${screeningId}`).then(r => r.json())
     ])
         .then(([seats, occupied]) => {
+
+            // Kontener miejsc
             const container = document.getElementById("seatsContainer");
             container.innerHTML = "";
 
-            // unikalne rzędy
+            // Unikalne rzędy
             const rows = [...new Set(seats.map(s => s.row))];
 
+            // Budowanie rzędów
             rows.forEach(rowNumber => {
                 const rowDiv = document.createElement("div");
                 rowDiv.className = "row";
 
-                // litera rzędu (A, B, C...)
+                // Litera rzędu
                 const rowLetter =
                     typeof rowNumber === "number"
                         ? String.fromCharCode(64 + rowNumber)
                         : rowNumber;
 
+                // Budowanie miejsc w rzędzie
                 seats
                     .filter(s => s.row === rowNumber)
                     .forEach(seat => {
                         const seatDiv = document.createElement("div");
 
-                        // sprawdzenie zajętości
+                        // Sprawdzenie czy miejsce jest zajęte
                         const isOccupied = occupied.some(
                             o => o.row === seat.row && o.number === seat.number
                         );
@@ -49,9 +57,10 @@ function loadSeats() {
                         } else {
                             seatDiv.className = "seat available";
 
-                            // etykieta miejsca np. 9H
+                            // Etykieta miejsca
                             seatDiv.dataset.label = `${seat.number}${rowLetter}`;
 
+                            // Obsługa wyboru miejsca
                             seatDiv.onclick = () =>
                                 toggleSeat(seatDiv, {
                                     id: seat.id,
@@ -65,18 +74,17 @@ function loadSeats() {
                 container.appendChild(rowDiv);
             });
 
-            // reset licznika
+            // Reset licznika miejsc
             document.getElementById("seatCounter").innerText = "Nie wybrano miejsc";
             updateReserveButton();
         })
         .catch(() => toast("Nie udało się załadować miejsc"));
 }
 
-
-/* =======================
-   WYBIERANIE MIEJSC
-======================= */
+// Dodaje lub usuwa miejsce z wyboru
 function toggleSeat(seatDiv, seat) {
+
+    // Sprawdzenie czy miejsce jest już wybrane
     const exists = selectedSeatIds.find(s => s.id === seat.id);
 
     if (exists) {
@@ -87,6 +95,7 @@ function toggleSeat(seatDiv, seat) {
         seatDiv.className = "seat selected";
     }
 
+    // Aktualizacja informacji o wybranych miejscach
     document.getElementById("seatCounter").innerText =
         selectedSeatIds.length === 0
             ? "Nie wybrano miejsc"
@@ -95,10 +104,7 @@ function toggleSeat(seatDiv, seat) {
     updateReserveButton();
 }
 
-
-/* =======================
-   PRZYCISK REZERWUJ
-======================= */
+// Aktualizacja stanu przycisku rezerwacji
 function updateReserveButton() {
     const btn = document.getElementById("reserveBtn");
     if (!btn) return;
@@ -107,10 +113,10 @@ function updateReserveButton() {
     btn.style.opacity = btn.disabled ? 0.6 : 1;
 }
 
-/* =======================
-   MODAL
-======================= */
+// Otwarcie modala rezerwacji
 function openReservationModal() {
+
+    // Brak wybranych miejsc
     if (selectedSeatIds.length === 0) {
         toast("Najpierw wybierz miejsca");
         return;
@@ -121,24 +127,27 @@ function openReservationModal() {
     const guestForm = document.getElementById("guestForm");
     const user = JSON.parse(localStorage.getItem("user"));
 
+    // Podsumowanie miejsc
     summary.innerHTML = `
         <p><strong>Wybrane miejsca:</strong>
         ${selectedSeatIds.map(s => s.label).join(", ")}</p>
     `;
 
+    // Formularz gościa tylko dla niezalogowanych
     guestForm.style.display = user ? "none" : "block";
 
     modal.classList.remove("hidden");
 }
 
+// Zamknięcie modala
 function closeReservationModal() {
     document.getElementById("reservationModal").classList.add("hidden");
 }
 
-/* =======================
-   POTWIERDZENIE
-======================= */
+// Potwierdzenie rezerwacji
 function confirmReservation() {
+
+    // Pobranie seansu
     const screeningId = localStorage.getItem("screeningId");
     if (!screeningId) {
         toast("Brak seansu");
@@ -147,16 +156,17 @@ function confirmReservation() {
 
     const user = JSON.parse(localStorage.getItem("user"));
 
+    // Dane rezerwacji
     const dto = {
         screeningId: Number(screeningId),
         seatIds: selectedSeatIds.map(s => s.id)
     };
 
-    // USER
+    // Rezerwacja użytkownika
     if (user && user.id > 0) {
         dto.userId = user.id;
     }
-    // GOŚĆ
+    // Rezerwacja gościa
     else {
         const name = document.getElementById("guestName").value.trim();
         const email = document.getElementById("guestEmail").value.trim();
@@ -170,6 +180,7 @@ function confirmReservation() {
         dto.guestEmail = email;
     }
 
+    // Wysłanie rezerwacji
     fetch("/api/reservations/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -180,6 +191,8 @@ function confirmReservation() {
             return r.json();
         })
         .then(data => {
+
+            // Dane do ekranu sukcesu
             const screening = JSON.parse(localStorage.getItem("screeningDetails"));
 
             localStorage.setItem("lastReservation", JSON.stringify({
@@ -198,6 +211,7 @@ function confirmReservation() {
                 seats: selectedSeatIds.map(s => s.label)
             }));
 
+            // Reset i przejście dalej
             selectedSeatIds = [];
             closeReservationModal();
             toast("🎉 Rezerwacja potwierdzona");
@@ -207,6 +221,3 @@ function confirmReservation() {
             toast("Błąd rezerwacji");
         });
 }
-
-
-
